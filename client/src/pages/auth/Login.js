@@ -5,18 +5,9 @@ import { Button } from 'antd';
 import {GoogleOutlined, MailOutlined} from '@ant-design/icons';
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { corupUser } from "../../functions/auth";
 
-const corupUser = async (authtoken) => {
-    return await axios.post(
-        `${process.env.REACT_APP_API}/corup-user`,
-        {},
-        {
-            headers: {
-                authtoken
-            }
-    });
-}
+
 
 const Login = ({ history }) => {
     const [email, setEmail] = useState('');
@@ -33,6 +24,14 @@ const Login = ({ history }) => {
 
     let dispatch = useDispatch();
 
+    const roleBasedRedirect = (res) => {
+        if (res.data.role === 'admin') {
+            history.push('/admin/dashboard');
+        } else {
+            history.push('/user/history');
+        }
+    }
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -43,18 +42,20 @@ const Login = ({ history }) => {
 
             try {
                 const res = await corupUser(idTokenResult.token);
+                dispatch({
+                    type: 'LOGGED_IN_USER',
+                    payload: {
+                        name: res.data.name,
+                        email: res.data.email,
+                        token: idTokenResult.token,
+                        role: res.data.role,
+                        _id: res.data._id
+                    }
+                });
+                roleBasedRedirect(res);
             } catch (err) {
                 console.log(err);
             }
-
-            /*dispatch({
-                type: 'LOGGED_IN_USER',
-                payload: {
-                    email: user.email,
-                    token: idTokenResult.token
-                }
-            });
-            history.push('/');*/
         } catch (err) {
             console.log(err);
             setLoading(false);
@@ -67,14 +68,22 @@ const Login = ({ history }) => {
             const result = await auth.signInWithPopup(googleAuthProvider);
             const { user } = result;
             const idTokenResult = await user.getIdTokenResult();
-            dispatch({
-                type: 'LOGGED_IN_USER',
-                payload: {
-                    email: user.email,
-                    token: idTokenResult.token
-                }
-            });
-            history.push('/');
+            try {
+                const res = await corupUser(idTokenResult.token);
+                dispatch({
+                    type: 'LOGGED_IN_USER',
+                    payload: {
+                        name: res.data.name,
+                        email: res.data.email,
+                        token: idTokenResult.token,
+                        role: res.data.role,
+                        _id: res.data._id
+                    }
+                });
+            } catch (err) {
+                console.log(err);
+            }
+            roleBasedRedirect(res);
         } catch (err) {
             console.log(err);
             setLoading(false);

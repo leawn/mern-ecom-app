@@ -9,9 +9,11 @@ import Register from "./pages/auth/Register";
 import Header from "./components/nav/Header";
 import RegisterComplete from "./pages/auth/RegisterComplete";
 import ForgotPassword from "./pages/auth/ForgotPassword";
+import History from './pages/user/History';
 
 import { auth } from './firebase';
 import { useDispatch } from "react-redux";
+import {corupUser, currentUser} from './functions/auth';
 
 const App = () => {
 
@@ -22,13 +24,21 @@ const App = () => {
             if (user) {
                 const idTokenResult = await user.getIdTokenResult();
 
-                dispatch({
-                    type: 'LOGGED_IN_USER',
-                    payload: {
-                        email: user.email,
-                        token: idTokenResult.token
-                    }
-                });
+                try {
+                    const res = await currentUser(idTokenResult.token);
+                    dispatch({
+                        type: 'LOGGED_IN_USER',
+                        payload: {
+                            name: res.data.name,
+                            email: res.data.email,
+                            token: idTokenResult.token,
+                            role: res.data.role,
+                            _id: res.data._id
+                        }
+                    });
+                } catch (err) {
+                    console.log(err);
+                }
             }
         });
         return () => unsubscribe();
@@ -44,6 +54,7 @@ const App = () => {
                 <Route exact path='/register' component={Register}/>
                 <Route exact path='/register/complete' component={RegisterComplete}/>
                 <Route exact path='/forgot-password' component={ForgotPassword}/>
+                <Route exact path='/user/history' component={History}/>
             </Switch>
         </>
     );

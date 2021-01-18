@@ -6,8 +6,9 @@ const router = express.Router();
 const { authCheck } = require('../middleware/auth');
 
 //controller
-const { corupUser } = require('../controllers/auth');
+const { corupUser, currentUser } = require('../controllers/auth');
 
 router.post('/corup-user', authCheck, corupUser);
+router.post('/current-user', authCheck, currentUser);
 
 module.exports = router;
