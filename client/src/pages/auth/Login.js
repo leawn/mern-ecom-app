@@ -5,6 +5,18 @@ import { Button } from 'antd';
 import {GoogleOutlined, MailOutlined} from '@ant-design/icons';
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from 'react-router-dom';
+import axios from 'axios';
+
+const corupUser = async (authtoken) => {
+    return await axios.post(
+        `${process.env.REACT_APP_API}/corup-user`,
+        {},
+        {
+            headers: {
+                authtoken
+            }
+    });
+}
 
 const Login = ({ history }) => {
     const [email, setEmail] = useState('');
@@ -28,14 +40,21 @@ const Login = ({ history }) => {
             const result = await auth.signInWithEmailAndPassword(email, password);
             const { user } = result;
             const idTokenResult = await user.getIdTokenResult();
-            dispatch({
+
+            try {
+                const res = await corupUser(idTokenResult.token);
+            } catch (err) {
+                console.log(err);
+            }
+
+            /*dispatch({
                 type: 'LOGGED_IN_USER',
                 payload: {
                     email: user.email,
                     token: idTokenResult.token
                 }
             });
-            history.push('/');
+            history.push('/');*/
         } catch (err) {
             console.log(err);
             setLoading(false);
